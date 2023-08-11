@@ -304,6 +304,13 @@ class EDD_Blockonomics
     return false;
   }
 
+  public function is_order_underpaid($order, $paid_amount){
+    // Return TRUE only if there has been a payment which is less than required.
+    $underpayment_slack = edd_get_option("edd_blockonomics_underpayment_slack", 0)/100 * $order['satoshi'];
+    $is_order_underpaid = ($order['satoshi'] - $underpayment_slack > $paid_amount && !empty($paid_amount)) ? TRUE : FALSE;
+    return $is_order_underpaid;
+}
+
   public function listener()
   {
     $listener = htmlspecialchars(isset($_GET['edd-listener']) ? $_GET['edd-listener'] : '');
@@ -406,7 +413,7 @@ class EDD_Blockonomics
             $meta_data['paid_btc_amount'] = $value/1.0e8;
             $payment->update_meta( '_edd_payment_meta', $meta_data ); 
       
-            if ($order['satoshi'] > $value)
+            if ($order['satoshi'] > $value && $this->is_order_underpaid($order, $value))
             {
               $status = -2; //Payment error , amount not matching
               edd_insert_payment_note($order_id, __('Paid BTC amount less than expected.','edd-blockonomics'));
@@ -674,6 +681,13 @@ class EDD_Blockonomics
           '1' => '1',
           'zero' => '0'
         ),
+        'class' => 'edd-blockonomics-advanced'
+      ),
+      array(
+        'id'      => 'edd_blockonomics_underpayment_slack',
+        'name'    => __('Underpayment Slack % (Allow payments that are off by a small percentage)', 'edd-blockonomics'),
+        'type'    => 'number',
+        'max'     => 20,
         'class' => 'edd-blockonomics-advanced'
       ),
       array(
