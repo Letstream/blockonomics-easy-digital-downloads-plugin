@@ -223,17 +223,7 @@ class EDD_Blockonomics
         $callback_secret = trim(edd_get_option('edd_blockonomics_callback_secret', ''));
         $blockonomics = new BlockonomicsAPI;
         $responseObj = $blockonomics->new_address($api_key, $callback_secret);
-        $currency = edd_get_currency();
-        if($currency == 'RIAL'){
-          $currency = 'IRR';
-        }
-        if($currency != 'BTC'){
-          $price = $blockonomics->get_price($currency);
-          $price = $price * 100/(100 + edd_get_option('edd_blockonomics_margin', 0));
-        }else{
-          $price = 1;
-        }
-
+        
         if($responseObj->response_code != 200)
         {
           edd_record_gateway_error( __( 'Error while getting BTC Address', 'edd-blockonomics' ) );
@@ -246,16 +236,15 @@ class EDD_Blockonomics
         $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
         $order = array(
           'value'              => $purchase_data['price'],
-          'satoshi'            => intval(1.0e8*$purchase_data['price']/$price),
-          'currency'           => $currency,
+          'satoshi'            => NULL,
+          'currency'           => NULL,
           'order_id'            => $payment_id,
           'status'             => -1,
           'timestamp'          => time(),
           'txid'               => ''
         );
-
-        $blockonomics_orders[$address] = $order;
-        edd_update_option('edd_blockonomics_orders', $blockonomics_orders);
+        $order = $this->calculate_order_price_params($order);
+        $this->update_order($address, $order);
 
         //Update post parameters to make them available in the listner method.
         update_post_meta($payment_id, 'blockonomics_address', $address);
@@ -315,6 +304,13 @@ class EDD_Blockonomics
     return false;
   }
 
+  public function is_order_underpaid($order, $paid_amount){
+    // Return TRUE only if there has been a payment which is less than required.
+    $underpayment_slack = edd_get_option("edd_blockonomics_underpayment_slack", 0)/100 * $order['satoshi'];
+    $is_order_underpaid = ($order['satoshi'] - $underpayment_slack > $paid_amount && !empty($paid_amount)) ? TRUE : FALSE;
+    return $is_order_underpaid;
+}
+
   public function listener()
   {
     $listener = htmlspecialchars(isset($_GET['edd-listener']) ? $_GET['edd-listener'] : '');
@@ -337,30 +333,55 @@ class EDD_Blockonomics
       
     }
 
-    $orders = edd_get_option('edd_blockonomics_orders');
     $address = isset($_REQUEST['show_order']) ? $_REQUEST['show_order'] : '';
     if ($address)
     {
+      
+      // Define required context here so that it can be accessed in the included template
+      $order = $this->process_order($address);
+      /** 
+       * TODO: Crypto below will be replaced by selected crypto when BCH support is added, adding it here
+       * now allows us to swap it in future without changing the template.
+       **/
+      $crypto = array(
+        'code' => 'btc',
+        'name' => 'Bitcoin',
+        'uri' => 'bitcoin'
+      );
+      $order_amount = $this->fix_displaying_small_values($order["satoshi"]);
+
+      $context = array(
+        "order_id" => $order["order_id"],
+        "order" => $order,
+        "address" => $address,
+        "crypto" => $crypto,
+        "order_amount" => $order_amount,
+        "payment_uri" => $this->get_crypto_payment_uri($crypto, $address, $order_amount),
+        "crypto_rate_str" => $this->get_crypto_rate_from_params($order['value'], $order['satoshi'])
+      );
+      
       $this->enqueue_stylesheets();
       $this->enqueue_scripts();
-      include plugin_dir_path(__FILE__)."order.php";
+
+      $context['script'] = $this->get_checkout_script($context);
+      
+      include plugin_dir_path(__FILE__)."templates/blockonomics_checkout.php";
       exit();
     }
 
     $address = isset($_REQUEST['finish_order']) ? $_REQUEST['finish_order'] : '';
     if ($address)
     {
-      $order = $orders[$address];
+      $order = $this->get_order($address);
       wp_redirect(edd_get_success_page_uri());
       exit;
     }
 
-    $address = isset($_REQUEST['get_order']) ? $_REQUEST['get_order'] : '';
+    $address = isset($_REQUEST['get_amount']) ? $_REQUEST['get_amount'] : '';
 
     if ($address)
     {
-      header("Content-Type: application/json");
-      exit(json_encode($orders[$address]));
+      $this->get_order_amount_info($address);
     }
 
     try
@@ -371,7 +392,7 @@ class EDD_Blockonomics
       if ($callback_secret  && $callback_secret == $secret)
       {
         $addr = htmlspecialchars(isset($_REQUEST['addr']) ? $_REQUEST['addr'] : '');
-        $order = $orders[$addr];
+        $order = $this->get_order($addr);
         $order_id = $order['order_id'];
 
         if ($order_id)
@@ -392,7 +413,7 @@ class EDD_Blockonomics
             $meta_data['paid_btc_amount'] = $value/1.0e8;
             $payment->update_meta( '_edd_payment_meta', $meta_data ); 
       
-            if ($order['satoshi'] > $value)
+            if ($order['satoshi'] > $value && $this->is_order_underpaid($order, $value))
             {
               $status = -2; //Payment error , amount not matching
               edd_insert_payment_note($order_id, __('Paid BTC amount less than expected.','edd-blockonomics'));
@@ -412,7 +433,6 @@ class EDD_Blockonomics
 
           $order['txid'] =  htmlspecialchars(isset($_REQUEST['txid']) ? $_REQUEST['txid'] : '');
           $order['status'] = $status;
-          $orders[$addr] = $order;
       
           if ($existing_status == -1)
           {
@@ -424,7 +444,7 @@ class EDD_Blockonomics
             $payment->update_meta( '_edd_payment_meta', $meta_data ); 
           }
       
-          edd_update_option('edd_blockonomics_orders', $orders);
+          $this->update_order($addr, $order);
         }
       } else {
         die('Incorrect Secret');
@@ -673,6 +693,13 @@ class EDD_Blockonomics
         'class' => 'edd-blockonomics-advanced'
       ),
       array(
+        'id'      => 'edd_blockonomics_underpayment_slack',
+        'name'    => __('Underpayment Slack % (Allow payments that are off by a small percentage)', 'edd-blockonomics'),
+        'type'    => 'number',
+        'max'     => 20,
+        'class' => 'edd-blockonomics-advanced'
+      ),
+      array(
         'id'      => 'edd_blockonomics_testsetup',
         'name'    => $test_setup,
         'readonly' => true,
@@ -690,14 +717,126 @@ class EDD_Blockonomics
   }
 
   public function enqueue_scripts(){
-      wp_enqueue_script( 'angular', plugins_url('js/angular.min.js', __FILE__), array('jquery') );
-      wp_enqueue_script( 'angular-resource', plugins_url('js/angular-resource.min.js', __FILE__), array('jquery') );
-      wp_enqueue_script( 'app', plugins_url('js/app.js', __FILE__), array('jquery') );
-      wp_localize_script( 'app', 'my_ajax_object',array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
-      wp_enqueue_script( 'angular-qrcode', plugins_url('js/angular-qrcode.js', __FILE__), array('jquery') );
-      wp_enqueue_script( 'vendors', plugins_url('js/vendors.min.js', __FILE__), array('jquery') );
-      wp_enqueue_script( 'reconnecting-websocket', plugins_url('js/reconnecting-websocket.min.js', __FILE__), array('jquery') );
+    wp_enqueue_script( 'reconnecting-websocket', plugins_url('js/vendors/reconnecting-websocket.min.js', __FILE__), array(), NULL, true);
+    wp_enqueue_script( 'qrious', plugins_url('js/vendors/qrious.min.js', __FILE__), array(), NULL, true);
+    wp_enqueue_script( 'bnomics-checkout', plugins_url('js/checkout.js', __FILE__), array('reconnecting-websocket', 'qrious'), NULL, true);
   }
+
+  public function get_checkout_script($context) {
+        
+    $script = "const blockonomics_data = '" . json_encode( array (
+      'crypto' => $context['crypto'],
+      'crypto_address' => $context['address'],
+      'time_period' => edd_get_option('edd_blockonomics_timeperiod', 10),
+      //Todo: Remove this comment when BCH support is added. The crypto parameter in the end is passed to make it usable for BCH when it comes without making changes
+      'finish_order_url' => $this->get_edd_url(array('finish_order'=>$context['address'], 'crypto'=>  $context['crypto']['code'])),
+      'get_order_amount_url' => $this->get_edd_url(array('get_amount'=>$context['address'], 'crypto'=>  $context['crypto']['code'])),
+      'payment_uri' => $context['payment_uri']
+    )). "'";
+
+    return $script;
+  }
+
+  public function get_crypto_payment_uri($crypto, $address, $order_amount) {
+    return $crypto['uri'] . ":" . $address . "?amount=" . $order_amount;
+  }
+
+  public function fix_displaying_small_values($satoshi){
+    if ($satoshi < 10000){
+        return rtrim(number_format($satoshi/1.0e8, 8),0);
+    } else {
+        return $satoshi/1.0e8;
+    }
+  }
+
+  public function get_edd_url($query) {
+    $final_query = array_merge($query, array('edd-listener' => 'blockonomics'));
+    return add_query_arg($final_query, home_url());
+  }
+
+  
+  public function get_crypto_rate_from_params($value, $satoshi) {
+    // Crypto Rate is re-calculated here and may slightly differ from the rate provided by Blockonomics
+    // This is required to be recalculated as the rate is not stored anywhere in $order, only the converted satoshi amount is.
+    // This method also helps in having a constant conversion and formatting for both JS and NoJS Templates avoiding the scientific notations.
+    return number_format($value*1.0e8/$satoshi, 2, '.', '');
+  }
+
+  public function get_order_amount_info($address){
+    $order = $this->process_order($address);
+
+    $order_amount = $this->fix_displaying_small_values($order['satoshi']);
+    $crypto_obj = array(
+      'code' => 'btc',
+      'name' => 'Bitcoin',
+      'uri' => 'bitcoin'
+    );
+
+    $response = array(
+        "payment_uri" => $this->get_crypto_payment_uri($crypto_obj, $address, $order_amount),
+        "order_amount" => $order_amount,
+        "crypto_rate_str" => $this->get_crypto_rate_from_params($order['value'], $order['satoshi'])
+    );
+    header("Content-Type: application/json");
+    exit(json_encode($response));
+  }
+
+  public function process_order($address) {
+    // Get Order by Address
+    $order = $this->get_order($address);
+
+    if (!isset($order)) {
+      // Todo: Do Something if the order is not found
+    }
+
+    // Update the order Prices
+    $order = $this->calculate_order_price_params($order);
+
+    // Update the order
+    $this->update_order($address, $order);
+
+    return $order;
+  }
+
+  public function calculate_order_price_params($order){
+    // Check if order is unused or new
+
+    $blockonomics = new BlockonomicsAPI;
+
+    if ( $order['status'] == -1) {
+
+      $currency = edd_get_currency();
+      if($currency == 'RIAL'){
+        $currency = 'IRR';
+      }
+
+      if($currency != 'BTC'){
+        $price = $blockonomics->get_price($currency);
+      }else{
+        $price = 1;
+      }
+
+      $order['currency'] = $currency;
+      $order['satoshi'] = intval(1.0e8*$order['value']/$price);
+    }
+
+    return $order;
+  }
+
+  public function get_order($address) {
+    $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
+
+    if (isset($blockonomics_orders[$address])) {
+      return $blockonomics_orders[$address];
+    }
+    return NULL;
+  }
+
+  public function update_order($address, $order) {
+    $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
+    $blockonomics_orders[$address] = $order;
+    edd_update_option('edd_blockonomics_orders', $blockonomics_orders);
+  } 
 
 }
 

@@ -1,45 +1,4 @@
-/* ----- Order Page Styles ------*/
-[ng\:cloak],
-[ng-cloak],
-[data-ng-cloak],
-[x-ng-cloak],
-.ng-cloak,
-.x-ng-cloak {
-  display: none !important;
-}
-
-.bnomics-order-container {
-  margin: 12vh auto;
-  padding: 10px;
-  max-width: 700px;
-}
-
-.bnomics-order-container h4 {
-  padding: 3px 0 3px 0 !important;
-  font-weight: 600;
-}
-
-.bnomics-order-container h5 {
-  margin: 15px 0;
-  letter-spacing: 1px;
-  font-weight: normal;
-  text-transform: unset;
-}
-
-.bnomics-progress-bar-container {
-  position: relative;
-  overflow: hidden;
-  height: 4px;
-  background: #ddd;
-}
-
-.bnomics-progress-bar-container .bnomics-progress-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 4px;
-  background: #B9B9B9;
-}
+/* ----- Checkout Page Styles ------*/
 
 .bnomics-order-info {
   display: flex;
@@ -61,20 +20,37 @@
 
 .bnomics-btc-info .bnomics-qr-code {
   flex: 1;
+  padding-top: 1em;
 }
 
 .bnomics-btc-info .bnomics-amount {
   flex: 2;
 }
 
-.bnomics-grey {
-  color:grey;
+.bnomics-qr-code {
+  display: none;
 }
 
-.bnomics-address {
-  margin-top: 10px;
-  position:relative;
-  margin:auto !important;
+.bnomics-qr-code-hint {
+  text-align: center;
+  display: block;
+}
+
+.bnomics-order-number {
+  text-transform: uppercase;
+}
+
+.bnomics-bg {
+  min-height: 180px;
+  padding-top: 5px;
+}
+
+.bnomics-qr {
+  text-align: center !important;
+  padding: 10px 10px 5px 10px;
+  width:180px;
+  margin: 0 auto;
+  text-align: left;
 }
 
 .bnomics-amount-input, .bnomics-address-input {
@@ -98,124 +74,32 @@
   word-break: break-all;
 }
 
-.bnomics-order-expired-wrapper, .bnomics-order-error-wrapper {
-  text-align: center;
+.bnomics-grey {
+  color:grey;
 }
 
-.bnomics-spinner {
-  margin: auto;
-  width: 60px;
-  height: 60px;
-  animation: rotate 1.4s infinite ease-in-out, background 1.4s infinite ease-in-out alternate;
+.bnomics-address, .bnomics-amount{
+  margin-top: 10px;
 }
 
-.bnomics-powered-by {
-  text-align: center;
-  margin-top: 2.6em;
-  font-size: 0.6em;
-  padding: 0;
-}
-
-.bnomics-qr-code-hint {
-  text-align: center;
-  margin-bottom: 1em;
-  font-size: 0.8em;
-  padding: 0 20px;
-}
-
-.bnomics-order-number {
-  text-transform: uppercase;
-}
-
-.bnomics-time-left {
-  line-height: 3;
-  font-size: 0.8em;
-}
-
-.bnomics-order-id {
-  text-align:right;
-}
-
-.bnomics-bg {
-  min-height: 180px;
-  padding-top: 5px;
-}
-
-.bnomics-qr {
-  text-align: center !important;
-  padding: 10px 10px 5px 10px;
-  width:180px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-.bnomics-paywith-btc {
-  border-radius: 10px 0px 0px 10px;
-}
-
-.bnomics-paywith-option {
-  color:#B9B9B9;
-  background-color:#F3F3F3;
-  border: 1px solid #B9B9B9;
-  padding: 8px 18px;
-  text-align: center;
-  text-decoration: none;
+.bnomics-display-error {
+  animation: errorAnimation 0s 3s forwards;
+  height: 0; 
+  width: 0;
+  overflow: hidden;
   display: inline-block;
-  cursor: pointer;
+  vertical-align: middle;
 }
 
-.bnomics-paywith-selected {
-  color:#fff;
-  background-color:#B9B9B9;
+@keyframes errorAnimation {
+  to   { width:auto;height: auto; }
 }
-
-.bnomics-symbol-selected {
-  color:#fff;
-  background-color:#B9B9B9;
-  border: 0px solid #B9B9B9;
-  padding: 1px 3px;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 3px;
-}
-
-.bnomics-paywith-label {
-  font-size:1.25em;
-}
-
-.bnomics-status-flex {
-  padding-top:10px;
-  padding-bottom:10px;
-}
-
-.bnomics-status-flex > div {
-  text-align: center;
-  padding: 5px;
-}
-
-.bnomics-horizontal-align {
+/* Style for QR Code in NoJS mode */
+svg {
+  width: 160px;
   margin: auto;
 }
-
-.bnomics-alt-icon{
-  width: 100% !important;
-  font-size:60px !important;
-  margin: 25px 0px !important;
-}
-
-.bnomics-small{
-  font-size: 0.8em;
-}
-
-.bnomics-bold{
-  font-weight: bold;
-}
-
-.bnomics-left{
-  text-align: left;
-}
-
-/* ---- Mobile -----*/
+/* Mobile */
 @media screen and (max-width: 800px) {
   .bnomics-btc-info {
     display: block !important;
@@ -225,53 +109,281 @@
     text-align: center;
   }
 
-  .bnomics-order-container h5 {
-    margin: 10px 0;
-  }
-
   .bnomics-order-info {
     display: block;
   }
 }
 
-/* ---- Spinner ---- */
-.bnomics-spinner {
-  padding: 20px;
-  text-align: center
+/* ----- Select Crypto Styles ------*/
+@font-face {
+  font-family: 'cryptos';
+  src:  url('../fonts/cryptos.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
 }
-.bnomics-ring {
-  display: inline-block;
-  /*display: none;*/
-  position: relative;
-  width: 74px;
-  height: 74px;
-}
-.bnomics-ring div {
-  box-sizing: border-box;
+
+[class^="bnomics-icon-"], [class*=" bnomics-icon-"] {
+  font-family: 'cryptos' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  font-size: 2em;
+  width: 15%;
+  min-width: 40px;
   display: block;
-  position: absolute;
-  width: 61px;
-  height: 61px;
-  margin: 6px;
-  border: 6px solid #B9B9B9;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  float: left;
+}
+
+.bnomics-icon-bch:before {
+  content: "\e900";
+}
+.bnomics-icon-btc:before {
+  content: "\e901";
+}
+
+.bnomics-select-options {
+  cursor:pointer;
+  width:100%;
+  display: block;
+  height: 4.2em;
+  margin-bottom: 10px !important;
+  box-shadow: 0 4px 8px 0;
+  transition: 0.3s;
+  text-align: center !important;
+  word-break: break-word;
+}
+
+.bnomics-select-options:hover {
+  box-shadow: 0 8px 16px 0;
+}
+
+.bnomics-select-container {
+/*padding-top is the space above crypto options on the select crypto page*/
+  padding-top: 10vh;
+  text-align:center;
+  max-width:400px;
+  margin:auto;
+}
+
+.bnomics-select-container table{
+  border-collapse: separate;
+  border-spacing: 10px 0px;
+  border: none;
+}
+
+.vertical-line {
+  border-left: 2px solid ;
+  height: 2em;
+  display: flex;
+  padding-left: 5%;
+  align-items: center;
+}
+
+/* ---- Spinner ---- */
+.bnomics-spinner-wrapper {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  animation: errorAnimationSync 0s 3s forwards;
+  -webkit-animation: errorAnimationSync 0s 3s forwards;
+}
+
+.bnomics-spinner {
+  display: inline-block;
+  width: 70px;
+  height: 70px;
+  border: 3px solid rgba(255,255,255,.3);
   border-radius: 50%;
-  animation: bnomics-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #B9B9B9 transparent transparent transparent;
+  border-top-color: #000;
+  animation: spin 1s ease-in-out infinite;
+  -webkit-animation: spin 1s ease-in-out infinite;
 }
-.bnomics-ring div:nth-child(1) {
-  animation-delay: -0.45s;
+
+@keyframes spin {
+  to { -webkit-transform: rotate(360deg); }
 }
-.bnomics-ring div:nth-child(2) {
-  animation-delay: -0.3s;
+@-webkit-keyframes spin {
+  to { -webkit-transform: rotate(360deg); }
 }
-.bnomics-ring div:nth-child(3) {
-  animation-delay: -0.15s;
+@keyframes errorAnimationSync {
+  to { height: 0; width: 0; overflow: hidden; padding: 0; }
 }
-@keyframes bnomics-ring {
-  0% {
+@-webkit-keyframes errorAnimationSync {
+  to { height: 0; width: 0; overflow: hidden; padding: 0; }
+}
+/** Hide Panels by Default **/
+
+#blockonomics_checkout:not(.no-js) .bnomics-order-container .bnomics-order-panel,
+#blockonomics_checkout:not(.no-js) .bnomics-order-container .bnomics-copy-amount-text,
+#blockonomics_checkout:not(.no-js) .bnomics-order-container .bnomics-copy-address-text {
+  display: none;
+}
+
+/* ----- Blockonomics Font Icons ----*/
+
+@font-face {
+  font-family: 'blockonomics-icons';
+  src: url('../fonts/blockonomics-icons.woff?6m1shn') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="blockonomics-icon-"], [class*=" blockonomics-icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'blockonomics-icons' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  margin-left: 2px;
+  margin-right: 2px;
+  font-size: 1.5em;
+}
+
+[class^="blockonomics-icon-"].spin::before, [class*=" blockonomics-icon-"].spin::before {
+  display: inline-block;
+  animation-name: rotate;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes rotate {
+  from {
     transform: rotate(0deg);
   }
-  100% {
+  to {
     transform: rotate(360deg);
   }
+}
+
+.blockonomics-icon-cart::before {
+  content: "\e900";
+}
+
+.blockonomics-icon-qr::before {
+  content: "\e901";
+}
+
+.blockonomics-icon-copy::before {
+  content: "\e902";
+}
+
+.blockonomics-icon-refresh::before {
+  content: "\e903";
+}
+
+.blockonomics-icon-copy,
+.blockonomics-icon-qr,
+.blockonomics-icon-refresh {
+  cursor: pointer;
+}
+
+/* - Blockonomics Font Icons Ends -- */
+
+#bnomics-amount-copy, #bnomics-address-copy {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bnomics-show-qr, #bnomics-refresh {
+  padding-left: 5px;
+}
+
+#blockonomics_checkout,
+#blockonomics_checkout h5,
+#blockonomics_checkout table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#blockonomics_checkout h5,
+#blockonomics_checkout table {
+  width: 100%;
+  max-width: 400px;
+}
+
+#blockonomics_checkout h5 {
+  text-align: left;
+}
+
+#blockonomics_checkout table {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  border-collapse: separate;
+  border-spacing: 0 0.5em;
+}
+
+#bnomics-refresh {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bnomics-copy-container {
+  display:flex;
+  align-items: center;
+  position: relative;
+}
+
+.bnomics-copy-container input {
+  flex-grow: 1;
+}
+
+.bnomics-copy-container-animation-rectangle {
+  position: absolute;
+  width: 100%;
+  transition: width 300ms ease-in-out, left 300ms ease-in-out;
+  content: '';
+  background-color: #fff;
+}
+
+#blockonomics_checkout button {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+#blockonomics_checkout button img {
+  margin-right: 5px;
+  height: 1rem;
+  width: auto;
+}
+
+#blockonomics_checkout .blockonomics-icon {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#blockonomics_checkout .bnomics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bnomics-header div {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.bnomics-crypto-price-timer {
+  display: block;
+  text-align: center;
+  transition: 300ms all ease-in-out;
 }
