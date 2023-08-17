@@ -812,6 +812,7 @@ class EDD_Blockonomics
 
       if($currency != 'BTC'){
         $price = $blockonomics->get_price($currency);
+        $price = $price * 100/(100 + edd_get_option('edd_blockonomics_margin', 0));
       }else{
         $price = 1;
       }
