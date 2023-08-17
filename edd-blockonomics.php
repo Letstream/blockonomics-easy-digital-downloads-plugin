@@ -229,6 +229,7 @@ class EDD_Blockonomics
         }
         if($currency != 'BTC'){
           $price = $blockonomics->get_price($currency);
+          $price = $price * 100/(100 + edd_get_option('edd_blockonomics_margin', 0));
         }else{
           $price = 1;
         }
@@ -649,6 +650,13 @@ class EDD_Blockonomics
           '25' => '25',
           '30' => '30'
         ),
+        'class' => 'edd-blockonomics-advanced'
+      ),
+      array(
+        'id'      => 'edd_blockonomics_margin',
+        'name'    => __('Extra Currency Rate Margin % (Increase live fiat to BTC rate by small percent)', 'edd-blockonomics'),
+        'type'    => 'number',
+        'max'     => 20,
         'class' => 'edd-blockonomics-advanced'
       ),
       array(
