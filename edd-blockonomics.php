@@ -426,6 +426,8 @@ class EDD_Blockonomics
       
           edd_update_option('edd_blockonomics_orders', $orders);
         }
+      } else {
+        die('Incorrect Secret');
       }
     }
     catch ( Blockonomics_Exception $e )
