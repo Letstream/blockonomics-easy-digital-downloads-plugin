@@ -662,7 +662,7 @@ class EDD_Blockonomics
         'type'    => 'advanced_settings',
       ),
       array(
-        'id'      => 'edd_blockonomics_payment_countdown_time',
+        'id'      => 'edd_blockonomics_timeperiod',
         'name'    => __('Time period of countdown timer on payment page (in minutes)', 'edd-blockonomics'),
         'type'    => 'select',
         'options' => array(
