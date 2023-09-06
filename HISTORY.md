@@ -1,5 +1,10 @@
 == Changelog ==
 
+= 1.3.8  =
+* Underpayment slack
+* Currency rate margin
+* Improved payment interface
+
 = 1.3.7  =
 * Improved test setup and checkout experience
 

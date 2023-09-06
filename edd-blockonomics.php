@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EDD - Blockonomics
  * Description: Accept Bitcoin Payments on your Easy Digital Downloads powered website with Blockonomics
- * Version: 1.3.7
+ * Version: 1.3.8
  * Author: Blockonomics
  * Author URI: https://www.blockonomics.co
  * License: MIT
