@@ -38,10 +38,9 @@ Try checkout product , and you will see pay with bitcoin option.
 Use bitcoin to pay and enjoy ! 
 
 ## Screenshots ## 
-
-![](assets-wp-repo/screenshot-1.png) 
 Blockonomics Settings
+![](assets-wp-repo/screenshot-1.png) 
 
+Payment Page
 ![](assets-wp-repo/screenshot-2.png) 
-Invoice Page
 
