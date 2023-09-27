@@ -9,6 +9,12 @@ class BlockonomicsAPI
     const SET_CALLBACK_URL = 'https://www.blockonomics.co/api/update_callback';
     const GET_CALLBACKS_URL = 'https://www.blockonomics.co/api/address?&no_balance=true&only_xpub=true&get_callback=true';
 
+    const BCH_BASE_URL = 'https://bch.blockonomics.co';
+    const BCH_NEW_ADDRESS_URL = 'https://bch.blockonomics.co/api/new_address';
+    const BCH_PRICE_URL = 'https://bch.blockonomics.co/api/price';
+    const BCH_SET_CALLBACK_URL = 'https://bch.blockonomics.co/api/update_callback';
+    const BCH_GET_CALLBACKS_URL = 'https://bch.blockonomics.co/api/address?&no_balance=true&only_xpub=true&get_callback=true';
+    
     public function __construct()
     {
         $this->api_key = $this->get_api_key();
@@ -19,18 +25,18 @@ class BlockonomicsAPI
         return edd_get_option('edd_blockonomics_api_key');
     }
 
-    public function test_new_address_gen($response)
+    public function test_new_address_gen($crypto, $response)
     {
         $error_str = '';
         $callback_secret = edd_get_option("edd_blockonomics_callback_secret");
-        $response = $this->new_address($this->api_key, $callback_secret, true);
+        $response = $this->new_address($callback_secret, $crypto, true);
         if ($response->response_code!=200){ 
             $error_str = $response->response_message;
         }
         return $error_str;
     }
 
-    public function new_address($api_key, $secret, $reset=false)
+    public function new_address($secret, $crypto, $reset=false)
     {
         if($reset)
         {
@@ -40,8 +46,12 @@ class BlockonomicsAPI
         {
             $get_params = "?match_callback=$secret";
         }
-        $url = BlockonomicsAPI::NEW_ADDRESS_URL.$get_params;
-        $response = $this->post($url, $api_key, '', 8);
+        if($crypto === 'btc'){
+            $url = BlockonomicsAPI::NEW_ADDRESS_URL.$get_params;
+        }else{
+            $url = BlockonomicsAPI::BCH_NEW_ADDRESS_URL.$get_params;            
+        }
+        $response = $this->post($url, $this->api_key, '', 8);
         if (!isset($responseObj)) $responseObj = new stdClass();
         $responseObj->{'response_code'} = wp_remote_retrieve_response_code($response);
         if (wp_remote_retrieve_body($response))
@@ -53,23 +63,39 @@ class BlockonomicsAPI
         return $responseObj;
     }
 
-    public function get_price($currency)
+    public function get_price($currency, $crypto)
     {
-    	$url = BlockonomicsAPI::PRICE_URL. "?currency=$currency";
+        if($crypto === 'btc'){
+            $url = BlockonomicsAPI::PRICE_URL. "?currency=$currency";
+        }else{
+            $url = BlockonomicsAPI::PRICE_URL. "?currency=$currency";
+        }
         $response = $this->get($url);
-        return json_decode(wp_remote_retrieve_body($response))->price;
+        if (!isset($responseObj)) $responseObj = new stdClass();
+        $responseObj->{'response_code'} = wp_remote_retrieve_response_code($response);
+        if (wp_remote_retrieve_body($response))
+        {
+          $body = json_decode(wp_remote_retrieve_body($response));
+          $responseObj->{'response_message'} = isset($body->message) ? $body->message : '';
+          $responseObj->{'price'} = isset($body->price) ? $body->price : '';
+        }
+        return $responseObj->price;
     }
 
-    public function get_xpubs($api_key)
-    {
-    	$url = BlockonomicsAPI::ADDRESS_URL;
-        $response = $this->get($url, $api_key);
-        return json_decode(wp_remote_retrieve_body($response));
-    }
+    // public function get_xpubs($api_key)
+    // {
+    // 	$url = BlockonomicsAPI::ADDRESS_URL;
+    //     $response = $this->get($url, $api_key);
+    //     return json_decode(wp_remote_retrieve_body($response));
+    // }
 
-    public function update_callback($callback_url, $xpub)
-    {
-    	$url = BlockonomicsAPI::SET_CALLBACK_URL;
+    public function update_callback($callback_url, $crypto, $xpub)
+    {   
+        if ($crypto === 'btc'){
+            $url = BlockonomicsAPI::SET_CALLBACK_URL;
+        }else{
+            $url = BlockonomicsAPI::BCH_SET_CALLBACK_URL;
+        }
     	$body = json_encode(array('callback' => $callback_url, 'xpub' => $xpub));
     	$response = $this->post($url, $this->api_key, $body);
         $responseObj = json_decode(wp_remote_retrieve_body($response));
@@ -78,10 +104,14 @@ class BlockonomicsAPI
         return json_decode(wp_remote_retrieve_body($response));
     }
 
-    public function get_callbacks()
+    public function get_callbacks($crypto)
     {
-    	$url = BlockonomicsAPI::GET_CALLBACKS_URL;
-    	$response = $this->get($url, $this->api_key);
+        if ($crypto === 'btc'){
+            $url = BlockonomicsAPI::GET_CALLBACKS_URL;
+        }else{
+            $url = BlockonomicsAPI::BCH_GET_CALLBACKS_URL;
+        }
+        $response = $this->get($url, $this->api_key);
         return $response;
     }
 
@@ -98,7 +128,7 @@ class BlockonomicsAPI
         return $error_str;
     }
 
-    public function check_get_callbacks_response_body ($response){
+    public function check_get_callbacks_response_body ($response, $crypto){
         $error_str = '';
         $response_body = json_decode(wp_remote_retrieve_body($response));
 
@@ -110,13 +140,13 @@ class BlockonomicsAPI
         //if merchant has at least one xPub on his Blockonomics account
         elseif (count($response_body) >= 1)
         {
-            $error_str = $this->examine_server_callback_urls($response_body);
+            $error_str = $this->examine_server_callback_urls($response_body, $crypto);
         }
         return $error_str;
     }
 
     // checks each existing xpub callback URL to update and/or use
-    public function examine_server_callback_urls($response_body)
+    public function examine_server_callback_urls($response_body, $crypto)
     {
         $callback_secret = edd_get_option("edd_blockonomics_callback_secret");
         $api_url = add_query_arg('edd-listener', 'blockonomics', home_url() );
@@ -144,7 +174,7 @@ class BlockonomicsAPI
         // Use the available xpub
         if($partial_match || $available_xpub){
           $update_xpub = $partial_match ? $partial_match : $available_xpub;
-            $response = $this->update_callback($wordpress_callback_url, $update_xpub);
+            $response = $this->update_callback($wordpress_callback_url, $crypto, $update_xpub);
             if ($response->response_code != 200) {
                 return $response->message;
             }
@@ -155,13 +185,18 @@ class BlockonomicsAPI
         return $error_str;
     }
 
-    public function check_callback_urls_or_set_one($response) 
+    public function check_callback_urls_or_set_one($crypto, $response) 
     {
+        //If BCH enabled and API Key is not set: give error
+        if(!$this->api_key && $crypto === 'bch'){
+            $error_str = __('Set the API Key or disable BCH', 'blockonomics-bitcoin-payments');
+            return $error_str;
+        }
         //chek the current callback and detect any potential errors
         $error_str = $this->check_get_callbacks_response_code($response);
         if(!$error_str){
             //if needed, set the callback.
-            $error_str = $this->check_get_callbacks_response_body($response);
+            $error_str = $this->check_get_callbacks_response_body($response, $crypto);
         }
         return $error_str;
     }
@@ -215,17 +250,53 @@ class BlockonomicsAPI
     	}
     }
 
-    // Runs when the Blockonomics Test Setup button is clicked
+    public function getSupportedCurrencies() {
+        return array(
+              'btc' => array(
+                    'code' => 'btc',
+                    'name' => 'Bitcoin',
+                    'uri' => 'bitcoin'
+              ),
+              'bch' => array(
+                    'code' => 'bch',
+                    'name' => 'Bitcoin Cash',
+                    'uri' => 'bitcoincash'
+              )
+          );
+    }
+
+    /*
+     * Get list of active crypto currencies
+     */
+    public function getActiveCurrencies() {
+        $active_currencies = array();
+        $blockonomics_currencies = $this->getSupportedCurrencies();
+        foreach ($blockonomics_currencies as $code => $currency) {
+            $enabled = edd_get_option('blockonomics_'.$code);
+            if($enabled || ($code === 'btc' && $enabled === false )){
+                $active_currencies[$code] = $currency;
+            }
+        }
+        return $active_currencies;
+    }
+
+    // Runs when the Blockonomics    Setup button is clicked
     // Returns any errors or false if no errors
     public function testSetup()
     {
-        return $this->test_one_crypto();
+        // return $this->test_one_crypto();
+        $test_results = array();
+        $active_cryptos = $this->getActiveCurrencies();
+        foreach ($active_cryptos as $code => $crypto) {
+            $test_results[$code] = $this->test_one_crypto($code);
+        }
+        return $test_results;
     }
 
-    public function test_one_crypto()
+    public function test_one_crypto($crypto)
     {
-        $response = $this->get_callbacks();
-        $error_str = $this->check_callback_urls_or_set_one($response);
+        $response = $this->get_callbacks($crypto);
+        $error_str = $this->check_callback_urls_or_set_one($crypto, $response);
         if (!$error_str)
         {
             //Everything OK ! Test address generation
@@ -238,5 +309,108 @@ class BlockonomicsAPI
         return false;
     }
 
+    public function get_edd_url($query) {
+        $final_query = array_merge($query, array('edd-listener' => 'blockonomics'));
+        return add_query_arg($final_query, home_url());
+    }
+
+    public function get_order_checkout_url($order_id){
+        $active_cryptos = $this->getActiveCurrencies();
+        // Check if more than one crypto is activated
+        $order_hash = $this->encrypt_hash($order_id);
+        if (count($active_cryptos) > 1) {
+            $order_url = $this->get_edd_url(array('select_crypto'=>$order_hash));
+        } elseif (count($active_cryptos) === 1) {
+            $order_url = $this->get_edd_url(array('show_order'=>$order_hash, 'crypto'=> array_keys($active_cryptos)[0]));
+        } elseif (count($active_cryptos) === 0) {
+            $order_url = $this->get_edd_url(array('crypto' => 'empty'));
+        } 
+        return $order_url;
+    }
+
+    /**
+     * Encrypts a string using the application secret. This returns a hex representation of the binary cipher text
+     *
+     * @param  $input
+     * @return string
+     */
+    public function encrypt_hash($input)
+    {
+        $encryption_algorithm = 'AES-128-CBC';
+        $hashing_algorith = 'sha256';
+        $secret = edd_get_option("edd_blockonomics_callback_secret");;
+        $key = hash($hashing_algorith, $secret, true);
+        $iv = substr($secret, 0, 16);
+
+        $cipherText = openssl_encrypt(
+            $input,
+            $encryption_algorithm,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        return bin2hex($cipherText);
+    }
+
+    /**
+     * Decrypts a string using the application secret.
+     *
+     * @param  $hash
+     * @return string
+     */
+    public function decrypt_hash($hash)
+    {
+        $encryption_algorithm = 'AES-128-CBC';
+        $hashing_algorith = 'sha256';
+        $secret = edd_get_option("edd_blockonomics_callback_secret");;
+        // prevent decrypt failing when $hash is not hex or has odd length
+        if (strlen($hash) % 2 || !ctype_xdigit($hash)) {
+            echo __("Error: Incorrect Hash. Hash cannot be validated.", 'edd-blockonomics');
+            exit();
+        }
+
+        // we'll need the binary cipher
+        $binaryInput = hex2bin($hash);
+        $iv = substr($secret, 0, 16);
+        $cipherText = $binaryInput;
+        $key = hash($hashing_algorith, $secret, true);
+
+        $decrypted = openssl_decrypt(
+            $cipherText,
+            $encryption_algorithm,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        if (empty($this->get_order($decrypted))) {
+            echo __("Error: Incorrect hash. EDD order not found.", 'edd-blockonomics');
+            exit();
+        }
+
+        return $decrypted;
+    }
+
+    public function get_order($order_id) {
+        $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
     
+        if (isset($blockonomics_orders[$order_id])) {
+          return $blockonomics_orders[$order_id];
+        }
+        return NULL;
+    }
+    
+    //This function needs to be replaced with the database table as this method to get order from address is inefficient
+    public function get_orderId_by_address($address) {
+        $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
+        
+        foreach ($blockonomics_orders as $order_id => $order) {
+            if ($order['address'] == $address){
+                return $order_id;
+            }
+        }
+        return NULL;
+    }
+
 }
