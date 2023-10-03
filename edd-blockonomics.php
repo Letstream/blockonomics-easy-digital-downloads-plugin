@@ -131,6 +131,7 @@ class EDD_Blockonomics
   
   public function edd_blockonomics_testsetup(){
       $setup_errors = $this->testSetup();
+      $return = new stdClass();
       if($setup_errors)
       {
         $return->type = 'error';
