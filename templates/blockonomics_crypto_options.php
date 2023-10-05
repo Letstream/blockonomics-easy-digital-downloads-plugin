@@ -1,17 +1,13 @@
-<?php
-$blockonomics = new BlockonomicsAPI;
-$cryptos = $blockonomics->getActiveCurrencies();
-$order_id = isset($_REQUEST["select_crypto"]) ? $_REQUEST["select_crypto"] : "";
-$order_url = $blockonomics->get_edd_url(array('show_order'=>$order_id))
-?>
+<?php get_header();?>
+
 <div id="blockonomics_checkout">
   <div class="bnomics-order-container">
     <div class="bnomics-select-container">
       <tr>
         <?php
-        foreach ($cryptos as $code => $crypto) {
+        foreach ($context['cryptos'] as $code => $crypto) {
           
-          $order_url = add_query_arg( array( 'crypto' => $code ), $order_url );
+          $order_url = add_query_arg( array( 'crypto' => $code ), $context['order_url'] );
         ?>
           <a href="<?php echo $order_url;?>">
             <button class="bnomics-select-options button">
@@ -29,3 +25,5 @@ $order_url = $blockonomics->get_edd_url(array('show_order'=>$order_id))
     </div>
   </div>
 </div>
+
+<?php get_footer();?>
