@@ -326,17 +326,21 @@ class EDD_Blockonomics
       $active_cryptos = $blockonomics->getActiveCurrencies();
         // Check if more than one crypto is activated
       if (count($active_cryptos) > 1) {
+        $context = array(
+          "order_url" => $blockonomics->get_edd_url(array('show_order'=>$select_crypto)),
+          "cryptos" => $active_cryptos,
+        );
         $this->enqueue_stylesheets();
         include plugin_dir_path(__FILE__)."templates/blockonomics_crypto_options.php";
-        exit();
+        exit;
       }elseif (count($active_cryptos) === 1) {
         $order_url = $this->get_edd_url(array('show_order'=>$select_crypto, 'crypto'=> array_keys($active_cryptos)[0]));
         wp_redirect($order_url);
-        exit();        
+        exit;        
       }elseif (count($active_cryptos) === 0) {
         $order_url = $this->get_edd_url(array('crypto' => 'empty'));
         wp_redirect($order_url);
-        exit();
+        exit;
       }
       
     }
@@ -344,7 +348,9 @@ class EDD_Blockonomics
     $crypto = isset($_REQUEST['crypto']) ? $_REQUEST['crypto'] : '';
 
     if ($crypto === "empty") {
+      $this->enqueue_stylesheets();
       include plugin_dir_path(__FILE__)."templates/blockonomics_no_crypto_selected.php";
+      exit;
     }elseif ($order_hash && $crypto) {
       $order = $this->process_order($order_hash, $crypto);
       $active_cryptos = $blockonomics->getActiveCurrencies();
@@ -366,6 +372,7 @@ class EDD_Blockonomics
       $context['script'] = $this->get_checkout_script($context);
       
       include plugin_dir_path(__FILE__)."templates/blockonomics_checkout.php";
+      exit;
     }
 
     $order_id_hash = isset($_REQUEST['finish_order']) ? $_REQUEST['finish_order'] : '';
@@ -500,7 +507,7 @@ class EDD_Blockonomics
     //$settings_page_testsetup = add_query_arg(array( 'edd-listener' => 'blockonomics', 'action' => 'test_setup') ,home_url());
     $settings_page = admin_url( 'edit.php?post_type=download&page=edd-settings&tab=gateways&section=blockonomics');
     $test_setup = '<p id="testsetup_msg"><b><i>'.__('Use below button to test the configuration.', 'edd-blockonomics').'</i></b></p>
-      <p> <a id="edd-blockonomics-test-setup"  href="javascript:testSetupFunc();" class="button button-small" style="max-width:90px;">Test Setup</a> </p>
+      <p> <a id="edd-blockonomics-test-setup"  href="javascript:doTestSetup();" class="button button-small" style="max-width:90px;">Test Setup</a> </p>
 
       <script type="text/javascript">
       var api_key = document.getElementsByName("edd_settings[edd_blockonomics_api_key]")[0].getAttribute(\'value\');
@@ -513,7 +520,18 @@ class EDD_Blockonomics
         setting_table.insertBefore(p_element, setting_table.childNodes[0]);
       }
 
-      var testSetupFunc = function() 
+      var doTestSetup = function()
+      {
+        localStorage.setItem(\'blockonomics_run_testSetup\', 1);
+        document.getElementById("submit").click();
+      }
+      console.log(localStorage.getItem(\'blockonomics_run_testSetup\'));
+      if (localStorage.getItem(\'blockonomics_run_testSetup\') == 1) {
+        localStorage.removeItem(\'blockonomics_run_testSetup\')
+        testSetupFunc();
+      }
+
+      function testSetupFunc() 
       {
         var current_api_key = document.getElementsByName("edd_settings[edd_blockonomics_api_key]")[0].value;
         if( (current_api_key == api_key && api_key.length == 0 ) 
@@ -567,7 +585,7 @@ class EDD_Blockonomics
         }
         else 
         {
-        	var xhr = new XMLHttpRequest();
+          var xhr = new XMLHttpRequest();
           xhr.open("POST", "'. admin_url('admin-ajax.php') .'", true);
           xhr.setRequestHeader(\'Content-Type\', \'application/x-www-form-urlencoded;\');
           xhr.send("action=testsetup");
@@ -889,16 +907,7 @@ class EDD_Blockonomics
     }
 
     return $order;
-  }
-
-  public function get_order($address) {
-    $blockonomics_orders = edd_get_option('edd_blockonomics_orders');
-
-    if (isset($blockonomics_orders[$address])) {
-      return $blockonomics_orders[$address];
-    }
-    return NULL;
-  }    
+  }   
 
   public function update_order($order_id, $order) {
     $blockonomics_orders = edd_get_option('edd_blockonomics_orders');

@@ -68,7 +68,7 @@ class BlockonomicsAPI
         if($crypto === 'btc'){
             $url = BlockonomicsAPI::PRICE_URL. "?currency=$currency";
         }else{
-            $url = BlockonomicsAPI::PRICE_URL. "?currency=$currency";
+            $url = BlockonomicsAPI::BCH_PRICE_URL. "?currency=$currency";
         }
         $response = $this->get($url);
         if (!isset($responseObj)) $responseObj = new stdClass();
@@ -81,13 +81,6 @@ class BlockonomicsAPI
         }
         return $responseObj->price;
     }
-
-    // public function get_xpubs($api_key)
-    // {
-    // 	$url = BlockonomicsAPI::ADDRESS_URL;
-    //     $response = $this->get($url, $api_key);
-    //     return json_decode(wp_remote_retrieve_body($response));
-    // }
 
     public function update_callback($callback_url, $crypto, $xpub)
     {   
