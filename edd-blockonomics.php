@@ -715,12 +715,12 @@ class EDD_Blockonomics
         'type'    => 'text'
       ),
       array(
-        'id'      => 'blockonomics_btc',
+        'id'      => 'edd_blockonomics_btc',
         'name'    =>  __('Bitcoin (BTC)', 'edd-blockonomics'),
         'type'    => 'checkbox',
       ),
       array(
-        'id'      => 'blockonomics_bch',
+        'id'      => 'edd_blockonomics_bch',
         'name'    =>  __("Bitcoin Cash (BCH)", 'edd-blockonomics'),
         'type'    => 'checkbox',
       ),

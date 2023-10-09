@@ -265,7 +265,7 @@ class BlockonomicsAPI
         $active_currencies = array();
         $blockonomics_currencies = $this->getSupportedCurrencies();
         foreach ($blockonomics_currencies as $code => $currency) {
-            $enabled = edd_get_option('blockonomics_'.$code);
+            $enabled = edd_get_option('edd_blockonomics_'.$code);
             if($enabled || ($code === 'btc' && $enabled === false )){
                 $active_currencies[$code] = $currency;
             }
