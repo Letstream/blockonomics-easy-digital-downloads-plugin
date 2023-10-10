@@ -494,6 +494,13 @@ class EDD_Blockonomics
 
   public function settings( $settings )
   {
+    $blockonomics_settings = $this->get_settings_array();
+    $blockonomics_settings = apply_filters('edd_blockonomics_settings', $blockonomics_settings);
+    $settings['blockonomics'] = $blockonomics_settings;
+    return $settings;
+  }
+
+  public function get_settings_array(){
     $callback_update_url = add_query_arg(array( 'edd-listener' => 'blockonomics', 'action' => 'update_callback') ,home_url());
     $callback_refresh = __( 'CALLBACK URL', 'edd-blockonomics' ).'<a href="'.$callback_update_url.'"
       id="generate-callback" style="font:400 20px/1 dashicons;margin-left: 7px; top: 4px;position:relative;text-decoration: none;" title="Generate New Callback URL">&#xf463;<a>';
@@ -644,7 +651,7 @@ class EDD_Blockonomics
       </script>
     ';
 
-    $blockonomics_settings = array(
+    return array(
       array(
         'id'      => 'edd_blockonomics_api_key',
         'name'    => __( 'BLOCKONOMICS API KEY', 'edd-blockonomics' ),
@@ -673,14 +680,16 @@ class EDD_Blockonomics
           '25' => '25',
           '30' => '30'
         ),
-        'class' => 'edd-blockonomics-advanced'
+        'class' => 'edd-blockonomics-advanced',
+        'default' => '10'
       ),
       array(
         'id'      => 'edd_blockonomics_margin',
         'name'    => __('Extra Currency Rate Margin % (Increase live fiat to BTC rate by small percent)', 'edd-blockonomics'),
         'type'    => 'number',
         'max'     => 20,
-        'class' => 'edd-blockonomics-advanced'
+        'class' => 'edd-blockonomics-advanced',
+        'default' => 0
       ),
       array(
         'id'      => 'edd_blockonomics_confirmations',
@@ -691,14 +700,16 @@ class EDD_Blockonomics
           '1' => '1',
           'zero' => '0'
         ),
-        'class' => 'edd-blockonomics-advanced'
+        'class' => 'edd-blockonomics-advanced',
+        'default' => '2'
       ),
       array(
         'id'      => 'edd_blockonomics_underpayment_slack',
         'name'    => __('Underpayment Slack % (Allow payments that are off by a small percentage)', 'edd-blockonomics'),
         'type'    => 'number',
         'max'     => 20,
-        'class' => 'edd-blockonomics-advanced'
+        'class' => 'edd-blockonomics-advanced',
+        'default' => 0
       ),
       array(
         'id'      => 'edd_blockonomics_testsetup',
@@ -707,10 +718,6 @@ class EDD_Blockonomics
         'type'    => 'testsetup',
       )
     );
-
-    $blockonomics_settings = apply_filters('edd_blockonomics_settings', $blockonomics_settings);
-    $settings['blockonomics'] = $blockonomics_settings;
-    return $settings;
   }
 
   public function enqueue_stylesheets(){
@@ -839,6 +846,28 @@ class EDD_Blockonomics
     $blockonomics_orders[$address] = $order;
     edd_update_option('edd_blockonomics_orders', $blockonomics_orders);
   } 
+
+  # Need to Discuss where to trigger this function for setting default values of admin settings
+  public function set_default_values_admin_settings(){
+    $settings_array = $this->get_settings_array();
+    foreach ($settings_array as $setting){
+      if($setting['class']){
+        if($setting['id'] == 'edd_blockonomics_timeperiod'){
+          if(edd_get_option($setting['id'], '10') === '10'){
+            edd_update_option($setting['id'], $setting['default']);
+          }
+        }elseif($setting['id'] == 'edd_blockonomics_margin' || $setting['id'] == 'edd_blockonomics_underpayment_slack'){
+          if(edd_get_option($setting['id'], 0) === 0){
+            edd_update_option($setting['id'], $setting['default']);
+          }
+        }elseif($setting['id'] == 'edd_blockonomics_confirmations'){
+          if(edd_get_option($setting['id'], 'zero') === 'zero'){
+            edd_update_option($setting['id'], $setting['default']);
+          }
+        }
+      }
+    }
+  }
 
 }
 
