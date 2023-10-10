@@ -525,7 +525,6 @@ class EDD_Blockonomics
         localStorage.setItem(\'blockonomics_run_testSetup\', 1);
         document.getElementById("submit").click();
       }
-      console.log(localStorage.getItem(\'blockonomics_run_testSetup\'));
       if (localStorage.getItem(\'blockonomics_run_testSetup\') == 1) {
         localStorage.removeItem(\'blockonomics_run_testSetup\')
         testSetupFunc();
