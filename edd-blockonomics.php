@@ -851,20 +851,8 @@ class EDD_Blockonomics
   public function set_default_values_admin_settings(){
     $settings_array = $this->get_settings_array();
     foreach ($settings_array as $setting){
-      if($setting['class']){
-        if($setting['id'] == 'edd_blockonomics_timeperiod'){
-          if(edd_get_option($setting['id'], '10') === '10'){
-            edd_update_option($setting['id'], $setting['default']);
-          }
-        }elseif($setting['id'] == 'edd_blockonomics_margin' || $setting['id'] == 'edd_blockonomics_underpayment_slack'){
-          if(edd_get_option($setting['id'], 0) === 0){
-            edd_update_option($setting['id'], $setting['default']);
-          }
-        }elseif($setting['id'] == 'edd_blockonomics_confirmations'){
-          if(edd_get_option($setting['id'], 'zero') === 'zero'){
-            edd_update_option($setting['id'], $setting['default']);
-          }
-        }
+      if (isset($setting['default']) && !isset(edd_get_option($setting['id']))) {
+        edd_update_option($setting['id'], $setting['default'])
       }
     }
   }
