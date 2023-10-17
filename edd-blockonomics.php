@@ -851,8 +851,8 @@ class EDD_Blockonomics
   public function set_default_values_admin_settings(){
     $settings_array = $this->get_settings_array();
     foreach ($settings_array as $setting){
-      if (isset($setting['default']) && !isset(edd_get_option($setting['id']))) {
-        edd_update_option($setting['id'], $setting['default'])
+      if (isset($setting['default']) && edd_get_option($setting['id']) === false){
+        edd_update_option($setting['id'], $setting['default']);
       }
     }
   }
