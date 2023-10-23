@@ -859,6 +859,17 @@ class EDD_Blockonomics
 
 }
 
+register_activation_hook( __FILE__, 'blockonomics_plugin_setup' );
+
+function blockonomics_plugin_setup() {
+  if(!is_plugin_active('easy-digital-downloads/easy-digital-downloads.php'))
+  {
+      trigger_error(__( 'Wordpress Bitcoin Payments - Blockonomics requires Easy Digital Downloads plugin to be installed and active.', 'edd-blockonomics' ).'<br>', E_USER_ERROR);
+  }
+  $edd_blockonomics = new EDD_Blockonomics;
+  $edd_blockonomics->set_default_values_admin_settings();
+}
+
 /*Call back method for the setting 'testsetup'*/
 function edd_testsetup_callback()
 {
