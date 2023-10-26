@@ -135,29 +135,21 @@ class EDD_Blockonomics
       $btc_error_str = isset($setup_errors_array['btc']) ? $setup_errors_array['btc'] : false;
       $bch_error_str = isset($setup_errors_array['bch']) ? $setup_errors_array['bch'] : false;
       $return = new stdClass();
-      if($btc_error_str || $bch_error_str)
-      {
-        $return->type = 'error';
-        if($btc_error_str){
-          $return->btc_message = "BTC: " . $btc_error_str . __('<p>For more information, please consult <a href="https://blockonomics.freshdesk.com/support/solutions/articles/33000215104-troubleshooting-unable-to-generate-new-address" target="_blank">this troubleshooting article</a></p>', 'edd-blockonomics');
+      $active_cryptos = $blockonomics->getActiveCurrencies();
+      foreach ($active_cryptos as $code => $crypto) {
+        $return->{$code} = new stdClass();
+        if(${$code . "_error_str"}){
+          $return->{$code}->type = 'error';
+          $return->{$code}->message = strtoupper($code) . __(': ') . ${$code . "_error_str"} . __('<p>For more information, please consult <a href="https://blockonomics.freshdesk.com/support/solutions/articles/33000215104-troubleshooting-unable-to-generate-new-address" target="_blank">this troubleshooting article</a></p>', 'edd-blockonomics');
+        }else{
+          $return->{$code}->type = 'updated';
+          $return->{$code}->message = strtoupper($code) . __(': Congrats ! Setup is all done', 'edd-blockonomics');
         }
-        if($bch_error_str){
-          $return->bch_message = "BCH: " . $bch_error_str . __('<p>For more information, please consult <a href="https://blockonomics.freshdesk.com/support/solutions/articles/33000215104-troubleshooting-unable-to-generate-new-address" target="_blank">this troubleshooting article</a></p>', 'edd-blockonomics');
-        }
-        echo json_encode($return);
       }
-      else
-      {
-        $return->type = 'updated';
-        $active_cryptos = $blockonomics->getActiveCurrencies();
-        foreach ($active_cryptos as $code => $crypto) {
-          $return->{$code . "_message"} = strtoupper($code) . __(': Congrats ! Setup is all done', 'edd-blockonomics');
-        }
-        echo json_encode($return);
-      }
+      echo json_encode($return);
       wp_die();
   }
-
+  
   public function register_gateway( $gateways )
   {
 
@@ -241,6 +233,7 @@ class EDD_Blockonomics
           'satoshi'            => NULL,
           'currency'           => NULL,
           'address'            => NULL,
+          'crypto'             => NULL,
           'status'             => -1,
           'timestamp'          => time(),
           'txid'               => ''
@@ -507,8 +500,9 @@ class EDD_Blockonomics
     //$settings_page_testsetup = add_query_arg(array( 'edd-listener' => 'blockonomics', 'action' => 'test_setup') ,home_url());
     $settings_page = admin_url( 'edit.php?post_type=download&page=edd-settings&tab=gateways&section=blockonomics');
     $test_setup = '<p id="testsetup_msg"><b><i>'.__('Use below button to test the configuration.', 'edd-blockonomics').'</i></b></p>
-      <p> <a id="edd-blockonomics-test-setup"  href="javascript:doTestSetup();" class="button button-small" style="max-width:90px;">Test Setup</a> </p>
-
+      <p> <a id="edd-blockonomics-test-setup"  href="javascript:doTestSetup();" class="button button-small" style="max-width:90px;" onclick="javascript:showClickedMessage();">Test Setup</a> </p>
+      <p id="test-setup-clicked-msg"></p>
+      
       <script type="text/javascript">
       var api_key = document.getElementsByName("edd_settings[edd_blockonomics_api_key]")[0].getAttribute(\'value\');
 
@@ -518,6 +512,43 @@ class EDD_Blockonomics
         p_element.innerHTML = "You are few clicks away from accepting bitcoin payments</p><p>Click on <b>Get Started for Free</b> on <a href=\'https://www.blockonomics.co/merchants\' target=\'_blank\'>Blockonomics Merchants</a>. Complete the Wizard, Copy the API Key when shown here";
         var setting_table = document.getElementsByTagName("table")[0];
         setting_table.insertBefore(p_element, setting_table.childNodes[0]);
+      }
+
+      var showClickedMessage = function()
+      {
+        var div = document.createElement( "div" );
+        div.classList.add( "updated", "settings-warning", "notice", "is-dismissible" );
+
+        /* create paragraph element to hold message */
+        var p = document.createElement( "p" );
+
+        /* Add message text */
+        p.innerHTML = "<b>Settings are being saved</b>";
+        div.appendChild( p );
+
+        /* Create Dismiss icon */
+        var b = document.createElement( "button" );
+        b.setAttribute( "type", "button" );
+        b.classList.add( "notice-dismiss" );
+
+        /* Add screen reader text to Dismiss icon */
+        var bSpan = document.createElement( "span" );
+        bSpan.classList.add( "screen-reader-text" );
+        bSpan.appendChild( document.createTextNode( "Dismiss this notice." ) );
+        b.appendChild( bSpan );
+
+        /* Add Dismiss icon to notice */
+        div.appendChild( b );
+
+        /* Insert notice in test msg div */
+        var click_msg = document.getElementById( "test-setup-clicked-msg" );
+        click_msg.appendChild(div);
+
+        /* Make the notice dismissable when the Dismiss icon is clicked */
+        b.addEventListener( "click", function () 
+        {
+          div.parentNode.removeChild( div );
+          });
       }
 
       var doTestSetup = function()
@@ -591,17 +622,17 @@ class EDD_Blockonomics
           xhr.onload = function() {
 
             response = JSON.parse(this.response);
-            if(response.btc_message){
+            if(response.btc){
               /* create notice div */
               var div = document.createElement( "div" );
-              div.classList.add( response.type, "settings-warning", "notice", "is-dismissible" );
+              div.classList.add( response.btc.type, "settings-warning", "notice", "is-dismissible" );
               div.setAttribute( "id", "setting-error-edd_blockonomics_api_key_changed" );
 
               /* create paragraph element to hold message */
               var p = document.createElement( "p" );
 
               /* Add message text */
-              p.innerHTML = "<b>"+response.btc_message+"</b>";
+              p.innerHTML = "<b>"+response.btc.message+"</b>";
               div.appendChild( p );
 
               /* Create Dismiss icon */
@@ -628,17 +659,17 @@ class EDD_Blockonomics
                 div.parentNode.removeChild( div );
                 });
             }
-            if(response.bch_message){
+            if(response.bch){
               /* create notice div */
               var div2 = document.createElement( "div" );
-              div2.classList.add( response.type, "settings-warning", "notice", "is-dismissible" );
+              div2.classList.add( response.bch.type, "settings-warning", "notice", "is-dismissible" );
               div2.setAttribute( "id", "setting-error-edd_blockonomics_api_key_changed" );
 
               /* create paragraph element to hold message */
               var p2 = document.createElement( "p" );
 
               /* Add message text */
-              p2.innerHTML = "<b>"+response.bch_message+"</b>";
+              p2.innerHTML = "<b>"+response.bch.message+"</b>";
               div2.appendChild( p2 );
 
               /* Create Dismiss icon */
@@ -855,20 +886,41 @@ class EDD_Blockonomics
     // Get Order by order id
     $order = $blockonomics->get_order($order_id);
 
-    if (isset($order) && !isset($order['address'])) {
-      $callback_secret = trim(edd_get_option('edd_blockonomics_callback_secret', ''));
-      $responseObj = $blockonomics->new_address($callback_secret, $crypto);
-      
-      if($responseObj->response_code != 200)
-      {
-        edd_record_gateway_error( __( 'Error while getting Address', 'edd-blockonomics' ) );
-        $this->displayError();
-        return;
-      }
+    if (isset($order)) {
+      if (!isset($order['address']) && !isset($order['crypto'])) {
+        $callback_secret = trim(edd_get_option('edd_blockonomics_callback_secret', ''));
+        $responseObj = $blockonomics->new_address($callback_secret, $crypto);
+        
+        if($responseObj->response_code != 200)
+        {
+          edd_record_gateway_error( __( 'Error while getting Address', 'edd-blockonomics' ) );
+          $this->displayError();
+          return;
+        }
 
-      $address = $responseObj->address;
-      $order['address'] = $address;
+        $address = $responseObj->address;
+        $order['address'] = $address;
+        $order['crypto'] = $crypto;
+      }
+      else{
+        if ($order['crypto'] != $crypto) {
+          $callback_secret = trim(edd_get_option('edd_blockonomics_callback_secret', ''));
+          $responseObj = $blockonomics->new_address($callback_secret, $crypto);
+          
+          if($responseObj->response_code != 200)
+          {
+            edd_record_gateway_error( __( 'Error while getting Address', 'edd-blockonomics' ) );
+            $this->displayError();
+            return;
+          }
+
+          $address = $responseObj->address;
+          $order['address'] = $address;
+          $order['crypto'] = $crypto;
+        }
+      }
     }
+
     if (!isset($order)) {
       // Todo: Do Something if the order is not found
     }
