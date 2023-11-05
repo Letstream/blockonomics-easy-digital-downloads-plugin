@@ -849,22 +849,37 @@ class EDD_Blockonomics
 
   # Need to Discuss where to trigger this function for setting default values of admin settings
   public function set_default_values_admin_settings(){
+    global $blockonomics_edd_db_version;
     $settings_array = $this->get_settings_array();
     foreach ($settings_array as $setting){
       if (isset($setting['default']) && edd_get_option($setting['id']) === false){
         edd_update_option($setting['id'], $setting['default']);
       }
     }
+    update_option( 'blockonomics_edd_db_version', $blockonomics_edd_db_version );
   }
 
 }
 
+global $blockonomics_edd_db_version;
+$blockonomics_edd_db_version = '1.0';
+
+add_action( 'plugins_loaded', 'blockonomics_update_setting_check' );
 register_activation_hook( __FILE__, 'blockonomics_plugin_setup' );
+
+function blockonomics_update_setting_check() {
+  global $blockonomics_edd_db_version;
+  $installed_ver = get_site_option( 'blockonomics_edd_db_version' );
+  if (empty($installed_ver) || version_compare( $installed_ver, $blockonomics_edd_db_version, '!=')){
+    $edd_blockonomics = new EDD_Blockonomics;
+    $edd_blockonomics->set_default_values_admin_settings();
+  }
+}
 
 function blockonomics_plugin_setup() {
   if(!is_plugin_active('easy-digital-downloads/easy-digital-downloads.php'))
   {
-      trigger_error(__( 'Wordpress Bitcoin Payments - Blockonomics requires Easy Digital Downloads plugin to be installed and active.', 'edd-blockonomics' ).'<br>', E_USER_ERROR);
+      trigger_error(__( 'EDD Bitcoin Payments - Blockonomics requires Easy Digital Downloads plugin to be installed and active.', 'edd-blockonomics' ).'<br>', E_USER_ERROR);
   }
   $edd_blockonomics = new EDD_Blockonomics;
   $edd_blockonomics->set_default_values_admin_settings();
