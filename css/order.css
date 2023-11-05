@@ -4,7 +4,7 @@
   display: flex;
 }
 
-.bnomics-order-info > div {
+.bnomics-order-info>div {
   padding-top: 5px;
   padding-bottom: 0;
 }
@@ -48,12 +48,13 @@
 .bnomics-qr {
   text-align: center !important;
   padding: 10px 10px 5px 10px;
-  width:180px;
+  width: 180px;
   margin: 0 auto;
   text-align: left;
 }
 
-.bnomics-amount-input, .bnomics-address-input {
+.bnomics-amount-input,
+.bnomics-address-input {
   padding: 2px 4px;
   font-weight: 600;
   margin-top: 5px;
@@ -62,12 +63,13 @@
   border: 1px solid #DDD;
   box-shadow: none;
   text-align: center;
-  padding:7px;
+  padding: 7px;
   cursor: pointer;
   margin-left: 0;
 }
 
-.bnomics-amount-input li, .bnomics-address-input li {
+.bnomics-amount-input li,
+.bnomics-address-input li {
   display: inline-block;
   list-style: none;
   margin-left: 5px;
@@ -75,16 +77,17 @@
 }
 
 .bnomics-grey {
-  color:grey;
+  color: grey;
 }
 
-.bnomics-address, .bnomics-amount{
+.bnomics-address,
+.bnomics-amount {
   margin-top: 10px;
 }
 
 .bnomics-display-error {
   animation: errorAnimation 0s 3s forwards;
-  height: 0; 
+  height: 0;
   width: 0;
   overflow: hidden;
   display: inline-block;
@@ -92,13 +95,18 @@
 }
 
 @keyframes errorAnimation {
-  to   { width:auto;height: auto; }
+  to {
+    width: auto;
+    height: auto;
+  }
 }
+
 /* Style for QR Code in NoJS mode */
 svg {
   width: 160px;
   margin: auto;
 }
+
 /* Mobile */
 @media screen and (max-width: 800px) {
   .bnomics-btc-info {
@@ -117,13 +125,14 @@ svg {
 /* ----- Select Crypto Styles ------*/
 @font-face {
   font-family: 'cryptos';
-  src:  url('../fonts/cryptos.woff') format('woff');
+  src: url('../fonts/cryptos.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: block;
 }
 
-[class^="bnomics-icon-"], [class*=" bnomics-icon-"] {
+[class^="bnomics-icon-"],
+[class*=" bnomics-icon-"] {
   font-family: 'cryptos' !important;
   speak: never;
   font-style: normal;
@@ -143,13 +152,14 @@ svg {
 .bnomics-icon-bch:before {
   content: "\e900";
 }
+
 .bnomics-icon-btc:before {
   content: "\e901";
 }
 
 .bnomics-select-options {
-  cursor:pointer;
-  width:100%;
+  cursor: pointer;
+  width: 100%;
   display: block;
   height: 4.2em;
   margin-bottom: 10px !important;
@@ -164,21 +174,21 @@ svg {
 }
 
 .bnomics-select-container {
-/*padding-top is the space above crypto options on the select crypto page*/
+  /*padding-top is the space above crypto options on the select crypto page*/
   padding-top: 10vh;
-  text-align:center;
-  max-width:400px;
-  margin:auto;
+  text-align: center;
+  max-width: 400px;
+  margin: auto;
 }
 
-.bnomics-select-container table{
+.bnomics-select-container table {
   border-collapse: separate;
   border-spacing: 10px 0px;
   border: none;
 }
 
 .vertical-line {
-  border-left: 2px solid ;
+  border-left: 2px solid;
   height: 2em;
   display: flex;
   padding-left: 5%;
@@ -198,7 +208,7 @@ svg {
   display: inline-block;
   width: 70px;
   height: 70px;
-  border: 3px solid rgba(255,255,255,.3);
+  border: 3px solid rgba(255, 255, 255, .3);
   border-radius: 50%;
   border-top-color: #000;
   animation: spin 1s ease-in-out infinite;
@@ -206,17 +216,35 @@ svg {
 }
 
 @keyframes spin {
-  to { -webkit-transform: rotate(360deg); }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
 }
+
 @-webkit-keyframes spin {
-  to { -webkit-transform: rotate(360deg); }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
 }
+
 @keyframes errorAnimationSync {
-  to { height: 0; width: 0; overflow: hidden; padding: 0; }
+  to {
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+  }
 }
+
 @-webkit-keyframes errorAnimationSync {
-  to { height: 0; width: 0; overflow: hidden; padding: 0; }
+  to {
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+  }
 }
+
 /** Hide Panels by Default **/
 
 #blockonomics_checkout:not(.no-js) .bnomics-order-container .bnomics-order-panel,
@@ -235,7 +263,8 @@ svg {
   font-display: block;
 }
 
-[class^="blockonomics-icon-"], [class*=" blockonomics-icon-"] {
+[class^="blockonomics-icon-"],
+[class*=" blockonomics-icon-"] {
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'blockonomics-icons' !important;
   speak: never;
@@ -253,7 +282,8 @@ svg {
   font-size: 1.5em;
 }
 
-[class^="blockonomics-icon-"].spin::before, [class*=" blockonomics-icon-"].spin::before {
+[class^="blockonomics-icon-"].spin::before,
+[class*=" blockonomics-icon-"].spin::before {
   display: inline-block;
   animation-name: rotate;
   animation-duration: 2s;
@@ -265,6 +295,7 @@ svg {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -294,12 +325,14 @@ svg {
 
 /* - Blockonomics Font Icons Ends -- */
 
-#bnomics-amount-copy, #bnomics-address-copy {
+#bnomics-amount-copy,
+#bnomics-address-copy {
   padding-left: 5px;
   padding-right: 5px;
 }
 
-#bnomics-show-qr, #bnomics-refresh {
+#bnomics-show-qr,
+#bnomics-refresh {
   padding-left: 5px;
 }
 
@@ -336,7 +369,7 @@ svg {
 }
 
 .bnomics-copy-container {
-  display:flex;
+  display: flex;
   align-items: center;
   position: relative;
 }
