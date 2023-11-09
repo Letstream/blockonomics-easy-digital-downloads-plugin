@@ -689,7 +689,7 @@ class EDD_Blockonomics
         'type'    => 'number',
         'max'     => 20,
         'class' => 'edd-blockonomics-advanced',
-        'default' => 0
+        'default' => 'zero'
       ),
       array(
         'id'      => 'edd_blockonomics_confirmations',
@@ -709,7 +709,7 @@ class EDD_Blockonomics
         'type'    => 'number',
         'max'     => 20,
         'class' => 'edd-blockonomics-advanced',
-        'default' => 0
+        'default' => 'zero'
       ),
       array(
         'id'      => 'edd_blockonomics_testsetup',
@@ -864,10 +864,11 @@ class EDD_Blockonomics
 global $blockonomics_edd_db_version;
 $blockonomics_edd_db_version = '1.0';
 
-add_action( 'plugins_loaded', 'blockonomics_update_setting_check' );
-register_activation_hook( __FILE__, 'blockonomics_plugin_setup' );
+add_action( 'plugins_loaded', 'edd_blockonomics_update_setting_check' );
+register_activation_hook( __FILE__, 'edd_blockonomics_plugin_setup' );
+add_filter('edd_update_option', 'edd_blockonomics_update_option_filter', 10, 2);
 
-function blockonomics_update_setting_check() {
+function edd_blockonomics_update_setting_check() {
   global $blockonomics_edd_db_version;
   $installed_ver = get_site_option( 'blockonomics_edd_db_version' );
   if (empty($installed_ver) || version_compare( $installed_ver, $blockonomics_edd_db_version, '!=')){
@@ -876,13 +877,22 @@ function blockonomics_update_setting_check() {
   }
 }
 
-function blockonomics_plugin_setup() {
+function edd_blockonomics_plugin_setup() {
   if(!is_plugin_active('easy-digital-downloads/easy-digital-downloads.php'))
   {
       trigger_error(__( 'EDD Bitcoin Payments - Blockonomics requires Easy Digital Downloads plugin to be installed and active.', 'edd-blockonomics' ).'<br>', E_USER_ERROR);
   }
   $edd_blockonomics = new EDD_Blockonomics;
   $edd_blockonomics->set_default_values_admin_settings();
+}
+
+function edd_blockonomics_update_option_filter($value, $key) {
+  if ($key === 'edd_blockonomics_underpayment_slack' || $key === 'edd_blockonomics_margin') {
+      if ($value === 'zero') {
+          $value = 0;
+      }
+  }
+  return $value;
 }
 
 /*Call back method for the setting 'testsetup'*/
