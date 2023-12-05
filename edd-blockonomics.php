@@ -610,6 +610,43 @@ class EDD_Blockonomics
             div.parentNode.removeChild( div );
             });
           }
+          xhr.onerror = function() {
+            /* create notice div */
+            var div3 = document.createElement( "div" );
+            div3.classList.add( "error", "settings-warning", "notice", "is-dismissible" );
+            div3.setAttribute( "id", "setting-error-edd_blockonomics_api_key_changed" );
+
+            /* create paragraph element to hold message */
+            var p3 = document.createElement( "p" );
+
+            /* Add message text */
+            p3.innerHTML = "<b>Network Error Occured</b>";
+            div3.appendChild( p3 );
+
+            /* Create Dismiss icon */
+            var b3 = document.createElement( "button" );
+            b3.setAttribute( "type", "button" );
+            b3.classList.add( "notice-dismiss" );
+
+            /* Add screen reader text to Dismiss icon */
+            var bSpan3 = document.createElement( "span" );
+            bSpan3.classList.add( "screen-reader-text" );
+            bSpan3.appendChild( document.createTextNode( "Dismiss this notice." ) );
+            b3.appendChild( bSpan3 );
+
+            /* Add Dismiss icon to notice */
+            div3.appendChild( b3 );
+
+            /* Insert notice in test msg div */
+            var test_msg3 = document.getElementById( "testsetup_msg" );
+            test_msg3.appendChild(div3);
+
+            /* Make the notice dismissable when the Dismiss icon is clicked */
+            b3.addEventListener( "click", function () 
+            {
+              div3.parentNode.removeChild( div3 );
+            });
+          }
         }
       };
 </script>
